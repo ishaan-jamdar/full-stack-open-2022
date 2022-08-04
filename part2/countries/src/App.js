@@ -8,8 +8,11 @@ const App = () => {
   const [countries, setCountries] = useState([])
   const [countryFilter, setCountryFilter] = useState('')
   
-  useEffect(() => axios.get('https://restcountries.com/v3.1/all').then(response => setCountries(response.data)), [])
-  
+  useEffect(() => {
+    const fetchCountries = async () => axios.get('https://restcountries.com/v3.1/all').then(response => setCountries(response.data))
+    fetchCountries()
+  } , [])
+
   return (
     <div>
       <Search countryFilter={countryFilter} setCountryFilter={setCountryFilter} />
