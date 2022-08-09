@@ -1,23 +1,43 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 
-import Persons from './components/Persons'
-import Filter from './components/Filter'
-import PersonForm from './components/PersonForm'
+import personService from './services/persons';
+
+import Persons from './components/Persons';
+import Filter from './components/Filter';
+import PersonForm from './components/PersonForm';
+
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [filterString, setFilterString] = useState('')
   const [newPerson, setNewPerson] = useState({name: '', number: ''})
 
-  useEffect(() => axios.get('http://localhost:3001/persons').then(response => setPersons(response.data)), [])
+  useEffect(() => {
+    personService.getAll()
+      .then(response => setPersons(response))
+  }, [])
 
   const addPerson = e => {
     e.preventDefault()
-    if (persons.map(person => person.name).includes(newPerson.name)) {
-      alert(`${newPerson.name} is already added to phonebook`)
+    const found = persons.find(person => person.name === newPerson.name)
+    if (found) {
+      if (window.confirm(`${newPerson.name} is already added to phonebook, replace the old number with a new one?`)) {
+        personService
+          .update(found.id, {...found, number: newPerson.number})
+          .then(updatedPerson => setPersons(persons.map(person => person.id !== found.id ? person : updatedPerson)))
+      }
     } else {
-      setPersons(persons.concat({name: newPerson.name, number: newPerson.number, id: persons.length + 1}))
+      personService
+        .create({name: newPerson.name, number: newPerson.number})
+        .then(response => setPersons(persons.concat(response)))
+    }
+  }
+
+  const deleteEntry = (id, name) => {
+    if (window.confirm(`delete ${name}`)) {
+      personService
+        .remove(id)
+        .then(setPersons(persons.filter(person => person.id !== id)))
     }
   }
 
@@ -28,7 +48,7 @@ const App = () => {
       <h3>Add a new</h3>
       <PersonForm addPerson={addPerson} newPerson={newPerson} setNewPerson={setNewPerson} />
       <h2>Numbers</h2>
-      <Persons persons={persons} filterString={filterString} />
+      <Persons persons={persons} filterString={filterString} deleteEntry={deleteEntry} />
     </div>
   )
 }
