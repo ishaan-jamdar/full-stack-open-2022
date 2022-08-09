@@ -5,12 +5,14 @@ import personService from './services/persons';
 import Persons from './components/Persons';
 import Filter from './components/Filter';
 import PersonForm from './components/PersonForm';
-
+import Notification from './components/Notification';
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [filterString, setFilterString] = useState('')
   const [newPerson, setNewPerson] = useState({name: '', number: ''})
+  const [message, setMessage] = useState(null)
+  const [successful, setSuccessful] = useState(true)
 
   useEffect(() => {
     personService.getAll()
@@ -25,11 +27,33 @@ const App = () => {
         personService
           .update(found.id, {...found, number: newPerson.number})
           .then(updatedPerson => setPersons(persons.map(person => person.id !== found.id ? person : updatedPerson)))
-      }
+          .then(() => {
+            setMessage(`Updated ${newPerson.name}`)
+            setSuccessful(true)
+            setTimeout(() => {
+              setMessage(null)
+            }, 5000)
+          })
+          .catch(error => {
+            setMessage(`Information of ${newPerson.name} has already been removed from server`)
+            setSuccessful(false)
+            setTimeout(() => {
+              setMessage(null)
+            }, 5000)
+            setPersons(persons.filter(person => person.name !== newPerson.name))
+          })
+      } 
     } else {
       personService
         .create({name: newPerson.name, number: newPerson.number})
         .then(response => setPersons(persons.concat(response)))
+        .then(() => {
+          setMessage(`Added ${newPerson.name}`)
+          setSuccessful(true)
+          setTimeout(() => {
+            setMessage(null)
+          }, 5000)
+        })
     }
   }
 
@@ -44,6 +68,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} successful={successful} />
       <Filter filterString={filterString} setFilterString={setFilterString} />
       <h3>Add a new</h3>
       <PersonForm addPerson={addPerson} newPerson={newPerson} setNewPerson={setNewPerson} />
