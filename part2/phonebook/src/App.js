@@ -35,12 +35,11 @@ const App = () => {
             }, 5000)
           })
           .catch(error => {
-            setMessage(`Information of ${newPerson.name} has already been removed from server`)
+            setMessage(error.response.data.error)
             setSuccessful(false)
             setTimeout(() => {
               setMessage(null)
             }, 5000)
-            setPersons(persons.filter(person => person.name !== newPerson.name))
           })
       } 
     } else {
@@ -50,6 +49,13 @@ const App = () => {
         .then(() => {
           setMessage(`Added ${newPerson.name}`)
           setSuccessful(true)
+          setTimeout(() => {
+            setMessage(null)
+          }, 5000)
+        })
+        .catch(error => {
+          setMessage(error.response.data.error)
+          setSuccessful(false)
           setTimeout(() => {
             setMessage(null)
           }, 5000)
